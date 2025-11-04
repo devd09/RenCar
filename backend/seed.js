@@ -1,116 +1,155 @@
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const bcrypt = require("bcryptjs");
+const path = require("path");
+const fs = require("fs");
+const connectDB = require("./config/db");
+
 const User = require("./models/User");
 const Car = require("./models/Car");
 const Booking = require("./models/Booking");
 const ContactMessage = require("./models/ContactMessage");
-const connectDB = require("./config/db");
 
+// Load environment variables
 dotenv.config();
 
+// Connect to MongoDB
 connectDB();
 
-const seedDatabase = async () => {
+const seedData = async () => {
   try {
-    console.log("🧹 Clearing existing data...");
-    await Booking.deleteMany();
-    await Car.deleteMany();
+    console.log(" Clearing existing data...");
     await User.deleteMany();
+    await Car.deleteMany();
+    await Booking.deleteMany();
     await ContactMessage.deleteMany();
 
-    console.log("🔐 Hashing passwords...");
-    const hashedPassword = await bcrypt.hash("123456", 10);
+    // Create users (1 host + 1 customer)
+    const salt = await bcrypt.genSalt(10);
 
-    console.log("🌱 Inserting sample users...");
-    const users = await User.insertMany([
-      {
-        username: "john_doe",
-        email: "john@example.com",
-        password: hashedPassword,
-        full_name: "John Doe",
-        phone: "9998887777",
-        address: "123 Main Street, New York",
-        role: "user",
-      },
-      {
-        username: "carhost1",
-        email: "host1@example.com",
-        password: hashedPassword,
-        full_name: "Alice Host",
-        phone: "8887776666",
-        address: "Los Angeles, CA",
-        role: "host",
-      },
-      {
-        username: "carhost2",
-        email: "host2@example.com",
-        password: hashedPassword,
-        full_name: "Bob Host",
-        phone: "7776665555",
-        address: "Miami, FL",
-        role: "host",
-      },
-    ]);
+    const hostPassword = await bcrypt.hash("host123", salt);
+    const customerPassword = await bcrypt.hash("user123", salt);
 
-    console.log("🚘 Inserting sample cars...");
-    await Car.insertMany([
+    const hostUser = await User.create({
+      full_name: "Rajesh Sharma",
+      username: "rajesh_host",
+      email: "rajesh.host@example.com",
+      password: hostPassword,
+      role: "host",
+    });
+
+    const customerUser = await User.create({
+      full_name: "Priya Mehta",
+      username: "priya_user",
+      email: "priya.user@example.com",
+      password: customerPassword,
+      role: "user",
+    });
+
+    // Create cars for the host
+    const carsData = [
       {
-        host_id: users[1]._id,
-        brand: "Toyota",
-        model: "Corolla",
+        host_id: hostUser._id,
+        brand: "Maruti Suzuki",
+        model: "Swift",
         year: 2022,
+        color: "Red",
+        license_plate: "MH12AB1234",
+        price_per_day: 1800,
+        category: "Hatchback",
+        seats: 5,
+        transmission: "Manual",
+        fuel_type: "Petrol",
+        image_path: "uploads/cars/maruti-swift.png",
+        location: "Mumbai",
+        available: true,
+        description: "A compact and reliable car, perfect for city rides.",
+      },
+      {
+        host_id: hostUser._id,
+        brand: "Hyundai",
+        model: "Creta",
+        year: 2023,
         color: "White",
-        license_plate: "TOY123",
-        price_per_day: 35,
-        category: "economy",
+        license_plate: "DL8CAF5678",
+        price_per_day: 3000,
+        category: "SUV",
         seats: 5,
-        transmission: "automatic",
-        fuel_type: "petrol",
-        image_path: "uploads/sample1.png",
-        location: "New York",
-        description: "Fuel-efficient and reliable compact car.",
+        transmission: "Automatic",
+        fuel_type: "Diesel",
+        image_path: "uploads/cars/hyundai-creta.png",
+        location: "Delhi",
+        available: true,
+        description: "Spacious SUV with great comfort for family trips.",
       },
       {
-        host_id: users[1]._id,
-        brand: "Honda",
-        model: "Civic",
+        host_id: hostUser._id,
+        brand: "Tata",
+        model: "Nexon EV",
         year: 2023,
+        color: "Blue",
+        license_plate: "KA03EV4321",
+        price_per_day: 3500,
+        category: "Electric",
+        seats: 5,
+        transmission: "Automatic",
+        fuel_type: "Electric",
+        image_path: "uploads/cars/tata-nexon-ev.png",
+        location: "Bengaluru",
+        available: true,
+        description: "Electric SUV with premium comfort and zero emissions.",
+      },
+      {
+        host_id: hostUser._id,
+        brand: "Toyota",
+        model: "Innova Crysta",
+        year: 2021,
         color: "Silver",
-        license_plate: "HON456",
-        price_per_day: 38,
-        category: "economy",
-        seats: 5,
-        transmission: "automatic",
-        fuel_type: "petrol",
-        image_path: "uploads/sample2.png",
-        location: "Los Angeles",
-        description: "Sleek design with excellent fuel economy.",
+        license_plate: "TN10CR2021",
+        price_per_day: 4000,
+        category: "MPV",
+        seats: 7,
+        transmission: "Automatic",
+        fuel_type: "Diesel",
+        image_path: "uploads/cars/toyota-innova.png",
+        location: "Chennai",
+        available: true,
+        description: "Perfect for long family journeys with excellent comfort.",
       },
       {
-        host_id: users[2]._id,
-        brand: "BMW",
-        model: "3 Series",
-        year: 2023,
-        color: "Black",
-        license_plate: "BMW789",
-        price_per_day: 90,
-        category: "luxury",
+        host_id: hostUser._id,
+        brand: "Honda",
+        model: "City",
+        year: 2022,
+        color: "Grey",
+        license_plate: "GJ05HC5678",
+        price_per_day: 2500,
+        category: "Sedan",
         seats: 5,
-        transmission: "automatic",
-        fuel_type: "petrol",
-        image_path: "uploads/sample3.png",
-        location: "Miami",
-        description: "Luxury sedan with sporty performance.",
+        transmission: "Manual",
+        fuel_type: "Petrol",
+        image_path: "uploads/cars/honda-city.png",
+        location: "Ahmedabad",
+        available: true,
+        description: "Elegant sedan with smooth performance and mileage.",
       },
-    ]);
+    ];
 
-    console.log("✅ Seeding completed successfully!");
-    process.exit(0);
+    // Ensure uploads folder exists
+    const uploadDir = path.join(__dirname, "uploads", "cars");
+    fs.mkdirSync(uploadDir, { recursive: true });
+
+    await Car.insertMany(carsData);
+
+    console.log("Seed data inserted successfully!");
+    console.log("Host login: rajesh.host@example.com / host123");
+    console.log("Customer login: priya.user@example.com / user123");
+
+    process.exit();
   } catch (error) {
-    console.error("❌ Seeding failed:", error);
+    console.error("Seeding failed:", error);
     process.exit(1);
   }
 };
 
-seedDatabase();
+seedData();
