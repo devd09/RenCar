@@ -89,4 +89,14 @@ router.delete("/:carId", protect(["host"]), async (req, res) => {
   }
 });
 
+router.get("/", async (req, res) => {
+  try {
+    const cars = await Car.find({ available: true }); // ✅ Only available
+    res.json(cars);
+  } catch (error) {
+    console.error("Error fetching cars:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 module.exports = router;
