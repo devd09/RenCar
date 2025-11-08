@@ -65,27 +65,29 @@ const HostDashboard = () => {
 
   return (
     <div className="dashboard">
-      <div className="dashboard-header">
-        <h1>Host Dashboard</h1>
-        <div>
+      {/* 🌐 Simple Navbar */}
+      <nav className="navbar">
+        <h2 className="nav-title">RenCar Host Dashboard</h2>
+        <div className="nav-links">
           <button
+            className="nav-btn"
             onClick={() => navigate("/host/add-car")}
-            className="add-car-btn"
           >
             + Add Car
           </button>
           <button
+            className="logout-btn"
             onClick={() => {
               localStorage.clear();
               navigate("/");
             }}
-            className="logout-btn"
           >
             Logout
           </button>
         </div>
-      </div>
+      </nav>
 
+      {/* 🧾 Stats Section */}
       <div className="stats-grid">
         <div className="stat-card">
           <h3>Total Cars</h3>
@@ -101,6 +103,7 @@ const HostDashboard = () => {
         </div>
       </div>
 
+      {/* 🚗 Cars Section */}
       <div className="cars-grid">
         {cars.length === 0 ? (
           <p style={{ textAlign: "center", gridColumn: "1 / -1" }}>
@@ -113,12 +116,11 @@ const HostDashboard = () => {
                 src={`http://localhost:5000/${car.image_path}`}
                 alt={car.model}
               />
-
               <div className="car-card-content">
                 <h4>
                   {car.brand} {car.model}
                 </h4>
-                <p>${car.price_per_day} / day</p>
+                <p>₹{car.price_per_day} / day</p>
                 <p
                   className={`car-status ${
                     car.available ? "available" : "booked"

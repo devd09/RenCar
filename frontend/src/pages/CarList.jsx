@@ -57,46 +57,38 @@ const CarList = () => {
   };
 
   // Step 2: Confirm booking after agreeing to T&C
-  const handleConfirmBooking = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        alert("Please login to book a car.");
-        return;
-      }
+  const handleConfirmBooking = () => {
+    setShowTnc(false);
 
-      await axios.post(
-        `http://localhost:5000/api/bookings/${selectedCar._id}`,
-        formData,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+    // Save booking details temporarily in localStorage
+    localStorage.setItem(
+      "pendingBooking",
+      JSON.stringify({
+        carId: selectedCar._id,
+        carInfo: selectedCar,
+        start_date: formData.start_date,
+        end_date: formData.end_date,
+        totalPrice,
+      })
+    );
 
-      alert("Car booked successfully!");
-      setCars((prev) =>
-        prev.map((c) =>
-          c._id === selectedCar._id ? { ...c, available: false } : c
-        )
-      );
-
-      setShowForm(false);
-      setShowTnc(false);
-    } catch (err) {
-      console.error("Booking failed:", err);
-      alert("Booking failed. Please try again.");
-    }
+    navigate("/payment");
   };
 
   if (loading) return <p>Loading cars...</p>;
 
   return (
     <div className="dashboard">
-      <div className="dashboard-header">
-        <h1>Available Cars</h1>
-        <div>
-          <button className="add-car-btn" onClick={() => navigate("/customer/dashboard")}>
-            My Dashboard
+
+      {/* 🌐 Top Navbar */}
+      <nav className="navbar">
+        <h2 className="nav-title">RenCar</h2>
+        <div className="nav-links">
+          <button className="nav-btn" onClick={() => navigate("/customer/dashboard")}>
+            Dashboard
+          </button>
+          <button className="nav-btn" onClick={() => navigate("/contact")}>
+            Contact Us
           </button>
           <button
             className="logout-btn"
@@ -108,36 +100,41 @@ const CarList = () => {
             Logout
           </button>
         </div>
-      </div>
+      </nav>
 
-      <div className="cars-grid">
-        {cars.length === 0 ? (
-          <p>No cars available.</p>
-        ) : (
-          cars.map((car) => (
-            <div key={car._id} className="car-card">
-              <img src={`http://localhost:5000/${car.image_path}`} alt={car.model} />
-              <h4>
-                {car.brand} {car.model}
-              </h4>
-              <p>₹{car.price_per_day} / day</p>
-              <p>{car.location}</p>
-              <p
-                className={`car-status ${car.available ? "available" : "booked"}`}
-              >
-                {car.available ? "Available" : "Booked"}
-              </p>
-              {car.available && (
-                <button
-                  className="add-car-btn"
-                  onClick={() => handleBookClick(car)}
+      {/* Main Car List */}
+      <div className="dashboard-content">
+        <h1>Available Cars</h1>
+
+        <div className="cars-grid">
+          {cars.length === 0 ? (
+            <p>No cars available.</p>
+          ) : (
+            cars.map((car) => (
+              <div key={car._id} className="car-card">
+                <img src={`http://localhost:5000/${car.image_path}`} alt={car.model} />
+                <h4>
+                  {car.brand} {car.model}
+                </h4>
+                <p>₹{car.price_per_day} / day</p>
+                <p>{car.location}</p>
+                <p
+                  className={`car-status ${car.available ? "available" : "booked"}`}
                 >
-                  Book Now
-                </button>
-              )}
-            </div>
-          ))
-        )}
+                  {car.available ? "Available" : "Booked"}
+                </p>
+                {car.available && (
+                  <button
+                    className="add-car-btn"
+                    onClick={() => handleBookClick(car)}
+                  >
+                    Book Now
+                  </button>
+                )}
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
       {/* Booking Form Modal */}
@@ -212,7 +209,7 @@ const CarList = () => {
             </div>
             <div className="form-actions">
               <button className="add-car-btn" onClick={handleConfirmBooking}>
-                I Agree & Book
+                I Agree & Proceed to Payment
               </button>
               <button
                 className="delete-btn"

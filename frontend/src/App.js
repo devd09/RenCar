@@ -11,6 +11,8 @@ import CustomerRegister from "./pages/CustomerRegister";
 import CustomerDashboard from "./pages/CustomerDashboard";
 import CarList from "./pages/CarList";
 import ContactUs from "./pages/ContactUs";
+import PaymentPage from "./pages/PaymentPage";
+
 function App() {
   return (
     <Router>
@@ -30,6 +32,7 @@ function App() {
         <Route path="/customer/register" element={<CustomerRegister />} />
         <Route path="/customer/dashboard" element={<CustomerDashboard />} />
         <Route path="/cars" element={<CarList />} />
+        <Route path="/payment" element={<PaymentPage />} />
         <Route path="/contact" element={<ContactUs />} />
       </Routes>
     </Router>

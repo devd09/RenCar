@@ -70,19 +70,15 @@ const CustomerDashboard = () => {
 
   return (
     <div className="dashboard">
-      <div className="dashboard-header">
-        <h1>My Bookings</h1>
-        <div>
-          <button
-            className="add-car-btn"
-            onClick={() => navigate("/cars")}
-          >
-            Go to Cars
+
+      {/* 🌐 Top Navbar */}
+      <nav className="navbar">
+        <h2 className="nav-title">RenCar</h2>
+        <div className="nav-links">
+          <button className="nav-btn" onClick={() => navigate("/cars")}>
+            Cars
           </button>
-          <button
-            className="add-car-btn"
-            onClick={() => navigate("/contact")}
-          >
+          <button className="nav-btn" onClick={() => navigate("/contact")}>
             Contact Us
           </button>
           <button
@@ -95,67 +91,65 @@ const CustomerDashboard = () => {
             Logout
           </button>
         </div>
-      </div>
+      </nav>
 
-      <div className="cars-grid">
-        {visibleBookings.length === 0 ? (
-          <p>No bookings yet. Click <b>“Go to Cars”</b> to book one!</p>
-        ) : (
-          visibleBookings.map((booking) => {
-            const car = booking.car_id;
-            return (
-              <div key={booking._id} className="car-card">
-                {car?.image_path && (
-                  <img
-                    src={`http://localhost:5000/${car.image_path}`}
-                    alt={car.model}
-                  />
-                )}
+      <div className="dashboard-content">
+        <h1>My Bookings</h1>
 
-                <h4>
-                  {car?.brand} {car?.model}
-                </h4>
-                <p>{car?.location}</p>
-                <p>
-                  <strong>From:</strong>{" "}
-                  {new Date(booking.start_date).toLocaleDateString()}
-                  <br />
-                  <strong>To:</strong>{" "}
-                  {new Date(booking.end_date).toLocaleDateString()}
-                </p>
-                <p>
-                  <strong>Total Price:</strong> ₹{booking.total_price}
-                </p>
+        <div className="cars-grid">
+          {visibleBookings.length === 0 ? (
+            <p>No bookings yet. Click <b>“Cars”</b> to book one!</p>
+          ) : (
+            visibleBookings.map((booking) => {
+              const car = booking.car_id;
+              return (
+                <div key={booking._id} className="car-card">
+                  {car?.image_path && (
+                    <img
+                      src={`http://localhost:5000/${car.image_path}`}
+                      alt={car.model}
+                    />
+                  )}
 
-                <p className="car-status">
-                  Status:{" "}
-                  <span
-                    className={
-                      booking.status === "booked" ? "available" : "booked"
-                    }
-                  >
-                    {booking.status}
-                  </span>
-                </p>
-
-                {booking.host_id && (
-                  <p className="text-sm text-gray-600 mt-1">
-                    Host: {booking.host_id.username} ({booking.host_id.email})
+                  <h4>
+                    {car?.brand} {car?.model}
+                  </h4>
+                  <p>{car?.location}</p>
+                  <p>
+                    <strong>From:</strong>{" "}
+                    {new Date(booking.start_date).toLocaleDateString()}
+                    <br />
+                    <strong>To:</strong>{" "}
+                    {new Date(booking.end_date).toLocaleDateString()}
                   </p>
-                )}
+                  <p>
+                    <strong>Total Price:</strong> ₹{booking.total_price}
+                  </p>
 
-                {booking.status === "booked" && (
-                  <button
-                    className="delete-btn"
-                    onClick={() => handleCancelBooking(booking._id)}
-                  >
-                    Cancel Booking
-                  </button>
-                )}
-              </div>
-            );
-          })
-        )}
+                  <p className="car-status">
+                    Status:{" "}
+                    <span
+                      className={
+                        booking.status === "booked" ? "available" : "booked"
+                      }
+                    >
+                      {booking.status}
+                    </span>
+                  </p>
+
+                  {booking.status === "booked" && (
+                    <button
+                      className="delete-btn"
+                      onClick={() => handleCancelBooking(booking._id)}
+                    >
+                      Cancel Booking
+                    </button>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
       </div>
     </div>
   );
