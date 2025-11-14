@@ -5,12 +5,20 @@ import "../styles/global.css";
 
 const CarList = () => {
   const [cars, setCars] = useState([]);
+  const [filteredCars, setFilteredCars] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCar, setSelectedCar] = useState(null);
-  const [formData, setFormData] = useState({ start_date: "", end_date: "" });
-  const [showForm, setShowForm] = useState(false);
-  const [showTnc, setShowTnc] = useState(false);
-  const [totalPrice, setTotalPrice] = useState(0);
+
+  const [filters, setFilters] = useState({
+    brand: "",
+    category: "",
+    transmission: "",
+    location: "",
+    maxPrice: "",
+    seats: "",
+    sortPrice: ""
+  });
+
+  const [allCategories, setAllCategories] = useState([]);
   const navigate = useNavigate();
 
   // Fetch cars
@@ -19,6 +27,10 @@ const CarList = () => {
       try {
         const res = await axios.get("http://localhost:5000/api/cars");
         setCars(res.data);
+        setFilteredCars(res.data);
+
+        const categories = [...new Set(res.data.map((car) => car.category.toLowerCase()))];
+        setAllCategories(categories);
       } catch (err) {
         console.error("Error fetching cars:", err);
       } finally {
@@ -28,67 +40,63 @@ const CarList = () => {
     fetchCars();
   }, []);
 
-  // When user clicks "Book Now"
-  const handleBookClick = (car) => {
-    setSelectedCar(car);
-    setShowForm(true);
-    setFormData({ start_date: "", end_date: "" });
-    setTotalPrice(0);
-  };
-
-  // Auto calculate total price
+  // Filtering logic
   useEffect(() => {
-    if (formData.start_date && formData.end_date && selectedCar) {
-      const start = new Date(formData.start_date);
-      const end = new Date(formData.end_date);
-      const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
-      setTotalPrice(days > 0 ? days * selectedCar.price_per_day : 0);
+    let updated = [...cars];
+
+    if (filters.brand) {
+      updated = updated.filter((car) =>
+        car.brand.toLowerCase().includes(filters.brand.toLowerCase())
+      );
     }
-  }, [formData, selectedCar]);
 
-  // Step 1: Show T&C popup first
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-    if (!formData.start_date || !formData.end_date) {
-      alert("Please select both start and end dates.");
-      return;
+    if (filters.category) {
+      updated = updated.filter((car) => car.category === filters.category);
     }
-    setShowTnc(true);
-  };
 
-  // Step 2: Confirm booking after agreeing to T&C
-  const handleConfirmBooking = () => {
-    setShowTnc(false);
+    if (filters.transmission) {
+      updated = updated.filter((car) => car.transmission === filters.transmission);
+    }
 
-    // Save booking details temporarily in localStorage
-    localStorage.setItem(
-      "pendingBooking",
-      JSON.stringify({
-        carId: selectedCar._id,
-        carInfo: selectedCar,
-        start_date: formData.start_date,
-        end_date: formData.end_date,
-        totalPrice,
-      })
-    );
+    if (filters.location) {
+      updated = updated.filter((car) =>
+        car.location.toLowerCase().includes(filters.location.toLowerCase())
+      );
+    }
 
-    navigate("/payment");
-  };
+    if (filters.maxPrice) {
+      updated = updated.filter(
+        (car) => car.price_per_day <= Number(filters.maxPrice)
+      );
+    }
+
+    if (filters.seats) {
+      updated = updated.filter((car) => {
+        if (filters.seats === "8+") return car.seats >= 8;
+        return car.seats === Number(filters.seats);
+      });
+    }
+
+    // Sorting logic
+    if (filters.sortPrice === "low") {
+      updated.sort((a, b) => a.price_per_day - b.price_per_day);
+    } else if (filters.sortPrice === "high") {
+      updated.sort((a, b) => b.price_per_day - a.price_per_day);
+    }
+
+    setFilteredCars(updated);
+  }, [filters, cars]);
 
   if (loading) return <p>Loading cars...</p>;
 
   return (
     <div className="dashboard">
-
-      {/* 🌐 Top Navbar */}
-      <nav className="navbar">
-        <h2 className="nav-title">RenCar</h2>
+      {/* NAVBAR */}
+      <div className="navbar">
+        <h2 className="nav-title">Available Cars</h2>
         <div className="nav-links">
           <button className="nav-btn" onClick={() => navigate("/customer/dashboard")}>
-            Dashboard
-          </button>
-          <button className="nav-btn" onClick={() => navigate("/contact")}>
-            Contact Us
+            My Dashboard
           </button>
           <button
             className="logout-btn"
@@ -100,127 +108,95 @@ const CarList = () => {
             Logout
           </button>
         </div>
-      </nav>
-
-      {/* Main Car List */}
-      <div className="dashboard-content">
-        <h1>Available Cars</h1>
-
-        <div className="cars-grid">
-          {cars.length === 0 ? (
-            <p>No cars available.</p>
-          ) : (
-            cars.map((car) => (
-              <div key={car._id} className="car-card">
-                <img src={`http://localhost:5000/${car.image_path}`} alt={car.model} />
-                <h4>
-                  {car.brand} {car.model}
-                </h4>
-                <p>₹{car.price_per_day} / day</p>
-                <p>{car.location}</p>
-                <p
-                  className={`car-status ${car.available ? "available" : "booked"}`}
-                >
-                  {car.available ? "Available" : "Booked"}
-                </p>
-                {car.available && (
-                  <button
-                    className="add-car-btn"
-                    onClick={() => handleBookClick(car)}
-                  >
-                    Book Now
-                  </button>
-                )}
-              </div>
-            ))
-          )}
-        </div>
       </div>
 
-      {/* Booking Form Modal */}
-      {showForm && selectedCar && (
-        <div className="modal-overlay">
-          <div className="modal-box">
-            <h2>
-              Book {selectedCar.brand} {selectedCar.model}
-            </h2>
-            <form onSubmit={handleFormSubmit} className="booking-form">
-              <label>Start Date</label>
-              <input
-                type="date"
-                value={formData.start_date}
-                onChange={(e) =>
-                  setFormData({ ...formData, start_date: e.target.value })
-                }
-                required
-              />
-              <label>End Date</label>
-              <input
-                type="date"
-                value={formData.end_date}
-                onChange={(e) =>
-                  setFormData({ ...formData, end_date: e.target.value })
-                }
-                required
-              />
-              {totalPrice > 0 && (
-                <p className="total-price">
-                  Total Price: <strong>₹{totalPrice}</strong>
-                </p>
-              )}
-              <div className="form-actions">
-                <button type="submit" className="add-car-btn">
-                  Confirm Booking
-                </button>
-                <button
-                  type="button"
-                  className="delete-btn"
-                  onClick={() => setShowForm(false)}
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* FILTER BOX */}
+      <div className="filter-box">
+        <input
+          type="text"
+          placeholder="Search Brand"
+          onChange={(e) => setFilters({ ...filters, brand: e.target.value })}
+        />
 
-      {/* Terms & Conditions Popup */}
-      {showTnc && (
-        <div className="modal-overlay">
-          <div className="modal-box">
-            <h2>Terms & Conditions</h2>
-            <div
-              style={{
-                maxHeight: "250px",
-                overflowY: "auto",
-                textAlign: "left",
-                marginBottom: "1rem",
-                fontSize: "0.95rem",
-                color: "#555",
-              }}
-            >
-              <p>1. The renter must provide a valid driving license at pickup.</p>
-              <p>2. Fuel costs, tolls, and fines are not included in the rental price.</p>
-              <p>3. The car must be returned in the same condition as delivered.</p>
-              <p>4. Late returns will incur additional charges per hour.</p>
-              <p>5. Any damage to the car will be charged to the renter.</p>
-              <p>6. The host reserves the right to cancel the booking in unforeseen situations.</p>
+        <select onChange={(e) => setFilters({ ...filters, category: e.target.value })}>
+          <option value="">All Types</option>
+          {allCategories.map((cat, idx) => (
+            <option key={idx} value={cat}>
+              {cat.toUpperCase()}
+            </option>
+          ))}
+        </select>
+
+        <select
+          onChange={(e) => setFilters({ ...filters, transmission: e.target.value })}
+        >
+          <option value="">Transmission</option>
+          <option value="automatic">Automatic</option>
+          <option value="manual">Manual</option>
+        </select>
+
+        <input
+          type="text"
+          placeholder="Location"
+          onChange={(e) => setFilters({ ...filters, location: e.target.value })}
+        />
+
+        <input
+          type="number"
+          placeholder="Max Price (₹)"
+          onChange={(e) => setFilters({ ...filters, maxPrice: e.target.value })}
+        />
+
+        {/* Seats Filter */}
+        <select onChange={(e) => setFilters({ ...filters, seats: e.target.value })}>
+          <option value="">Seats</option>
+          <option value="2">2 seats</option>
+          <option value="4">4 seats</option>
+          <option value="5">5 seats</option>
+          <option value="7">7 seats</option>
+          <option value="8+">8+ seats</option>
+        </select>
+
+        {/* Price Sorting */}
+        <select onChange={(e) => setFilters({ ...filters, sortPrice: e.target.value })}>
+          <option value="">Sort by Price</option>
+          <option value="low">Low → High</option>
+          <option value="high">High → Low</option>
+        </select>
+      </div>
+
+      {/* CAR GRID */}
+      <div className="cars-grid">
+        {filteredCars.length === 0 ? (
+          <p>No cars match the selected filters.</p>
+        ) : (
+          filteredCars.map((car) => (
+            <div key={car._id} className="car-card">
+              <img src={`http://localhost:5000/${car.image_path}`} alt={car.model} />
+
+              <h4>
+                {car.brand} {car.model}
+              </h4>
+              <p>₹{car.price_per_day} / day</p>
+              <p>{car.location}</p>
+              <p>{car.seats} seats</p>
+
+              <p className={`car-status ${car.available ? "available" : "booked"}`}>
+                {car.available ? "Available" : "Booked"}
+              </p>
+
+              {car.available && (
+                <button
+                  className="add-car-btn"
+                  onClick={() => navigate(`/cars/book/${car._id}`)}
+                >
+                  Book Now
+                </button>
+              )}
             </div>
-            <div className="form-actions">
-              <button className="add-car-btn" onClick={handleConfirmBooking}>
-                I Agree & Proceed to Payment
-              </button>
-              <button
-                className="delete-btn"
-                onClick={() => setShowTnc(false)}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          ))
+        )}
+      </div>
     </div>
   );
 };

@@ -756,3 +756,28 @@ body {
   background-color: #b52b27;
 }
 
+/* ======== Filter Box ======== */
+.filter-box {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.filter-box input,
+.filter-box select {
+  padding: 0.6rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.filter-box input:focus,
+.filter-box select:focus {
+  border-color: #007bff;
+  outline: none;
+}
