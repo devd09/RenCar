@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom Admin UI Enhancements */
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #f3f4f6;
+  color: #111827;
+  -webkit-font-smoothing: antialiased;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #e5e7eb;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #9ca3af;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+/* Sidebar hover */
+.sidebar-link {
+  @apply px-3 py-2 rounded-md transition-all duration-200 cursor-pointer;
+}
+
+.sidebar-link:hover {
+  @apply bg-indigo-100 text-indigo-600;
+}
+
+/* Admin Panel Card */
+.admin-card {
+  @apply bg-white rounded-xl shadow-md p-4 transition-all duration-300;
+}
+
+.admin-card:hover {
+  @apply shadow-xl scale-[1.02];
+}
+
+/* Buttons */
+.btn-primary {
+  @apply bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md shadow transition;
+}
+
+.delete-btn {
+  @apply text-red-600 hover:text-red-800 transition font-semibold cursor-pointer;
+}
+
+/* Fade-in effect */
+.fade-in {
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

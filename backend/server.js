@@ -13,31 +13,52 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Serve static files (uploaded images)
+// Serve uploaded images
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Routes
+// ROUTES
+const adminRoutes = require("./routes/adminRoutes");
 const carRoutes = require("./routes/carRoutes");
 const authRoutes = require("./routes/authRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
 const hostRoutes = require("./routes/hostRoutes");
 
+/* -----------------------------
+      API ROUTES
+----------------------------- */
+
+// Admin
+app.use("/api/admin", adminRoutes);
+
+// Host
 app.use("/api/host", hostRoutes);
+
+// Cars
 app.use("/api/cars", carRoutes);
+
+// Auth
 app.use("/api/auth", authRoutes);
+
+// Bookings
 app.use("/api/bookings", bookingRoutes);
 
-// Basic test route
+/* -----------------------------
+      DEFAULT ROUTE
+----------------------------- */
 app.get("/", (req, res) => {
   res.send("RenCar backend connected to local MongoDB!");
 });
 
-// 404 Handler
+/* -----------------------------
+     404 HANDLER
+----------------------------- */
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });
 });
 
-// Global Error Handler
+/* -----------------------------
+     GLOBAL ERROR HANDLER
+----------------------------- */
 app.use((err, req, res, next) => {
   console.error("Server Error:", err.stack);
   res.status(500).json({ message: "Internal Server Error" });
